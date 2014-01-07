@@ -1,17 +1,20 @@
 Luyten
 ======
 Decompiler Gui for Procyon<br>
-[![Build Status](http://ci.modcrafting.com/view/Luyten/job/Luyten/badge/icon)](http://ci.modcrafting.com/view/Luyten/job/Luyten/)
 
 ## Screenshot
 ![Screen](http://puu.sh/3Ak9r.jpg)
 
 ### Downloads
-[Releases](https://github.com/deathmarine/Luyten/releases)<br>
+[Releases](https://github.com/b0omm/Luyten/releases)<br>
 
-### Bugs/Suggestions
-[Issues](https://github.com/deathmarine/Luyten/issues)<br>
+### Changes
+Enable close tab by middle mouse button<br>
+Fix open empty tab on package double click<br>
+Update to Procyon v0.5.23<br><br>
 
+### Original
+[Fork From deathmarine](https://github.com/deathmarine/Luyten)<br>
 
 ## Powered by 
 *****
@@ -19,7 +22,6 @@ Decompiler Gui for Procyon<br>
 &copy; 2013 Mike Strobel<br>
 [https://bitbucket.org/mstrobel/procyon/overview](https://bitbucket.org/mstrobel/procyon/overview)<br>
 [Apache License](https://github.com/deathmarine/Luyten/blob/master/distfiles/Procyon.License.txt)<br>
-
 
 ### RSyntaxTextArea
 &copy; 2012 Robert Futrell<br>

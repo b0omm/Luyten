@@ -359,8 +359,8 @@ public class Model extends JFrame implements WindowListener {
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                JOptionPane.showMessageDialog(null, "Luyten Gui Build#" + JENKINS_BUILD + "\n" + "by Deathmarine\n\n" + "Powered By\nProcyon\n"
-                        + "(c) 2013 Mike Strobel\n\n" + "RSyntaxTextArea\n" + "(c) 2012 Robert Futrell\n" + "All rights reserved.");
+                JOptionPane.showMessageDialog(null, "Luyten Gui Build#" + JENKINS_BUILD + "\n" + "by Deathmarine\n\nForked by b0omm\nchronix91@gmail.com\n\n" + "Powered By\nProcyon\n"
+                        + "(c) 2013 Mike Strobel\n\n" + "RSyntaxTextArea\n" + "(c) 2012 Robert Futrell\n" + "All rights reserved.","About",JOptionPane.INFORMATION_MESSAGE);
             }
         });
         fileMenu.add(menuItem);
