@@ -9,9 +9,9 @@ Decompiler Gui for Procyon<br>
 [Releases](https://github.com/b0omm/Luyten/releases)<br>
 
 ### Changes
-Enable close tab by middle mouse button<br>
-Fix open empty tab on package double click<br>
-Update to Procyon v0.5.23<br><br>
+*Enable close tab by middle mouse button<br>
+*Fix open empty tab on package double click<br>
+*Update to Procyon v0.5.23<br><br>
 
 ### Original
 [Fork From deathmarine](https://github.com/deathmarine/Luyten)<br>
