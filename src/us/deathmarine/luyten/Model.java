@@ -610,7 +610,7 @@ public class Model extends JSplitPane {
 					if (file.length() > MAX_JAR_FILE_SIZE_BYTES) {
 						throw new TooLargeFileException(file.length());
 					}
-					if (file.getName().endsWith(".zip") || file.getName().endsWith(".jar")) {
+					if (file.getName().endsWith(".zip") || file.getName().endsWith(".jar") || file.getName().endsWith(".war")) {
 						JarFile jfile;
 						jfile = new JarFile(file);
 						label.setText("Loading: " + jfile.getName());

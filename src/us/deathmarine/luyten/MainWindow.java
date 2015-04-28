@@ -131,6 +131,7 @@ public class MainWindow extends JFrame {
 
 		if (fileFromCommandLine == null
 				|| fileFromCommandLine.getName().toLowerCase().endsWith(".jar")
+				|| fileFromCommandLine.getName().toLowerCase().endsWith(".war")
 				|| fileFromCommandLine.getName().toLowerCase().endsWith(".zip")) {
 			model.startWarmUpThread();
 		}
