@@ -1,18 +1,22 @@
 package us.deathmarine.luyten;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.net.URI;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.ListIterator;
 import java.util.Map;
+
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.BoxLayout;
@@ -26,6 +30,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 import javax.swing.text.DefaultEditorKit;
 
@@ -42,6 +47,8 @@ public class MainMenuBar extends JMenuBar {
 	private final MainWindow mainWindow;
 	private final Map<String, Language> languageLookup = new HashMap<String, Language>();
 
+	private JMenu recentFiles;
+	private JMenuItem clearRecentFiles;
 	private JCheckBox flattenSwitchBlocks;
 	private JCheckBox forceExplicitImports;
 	private JCheckBox forceExplicitTypes;
@@ -111,6 +118,8 @@ public class MainMenuBar extends JMenuBar {
 
 					buildHelpMenu(helpMenu);
 					refreshMenuPopup(helpMenu);
+					
+					updateRecentFiles();
 				} catch (Exception e) {
 					Luyten.showExceptionDialog("Exception!", e);
 				}
@@ -131,6 +140,42 @@ public class MainMenuBar extends JMenuBar {
 		}.start();
 	}
 
+	public void updateRecentFiles() {
+		if (RecentFiles.paths.isEmpty()) {
+			recentFiles.setEnabled(false);
+			clearRecentFiles.setEnabled(false);
+			return;
+		} else {
+			recentFiles.setEnabled(true);
+			clearRecentFiles.setEnabled(true);
+		}
+		
+		recentFiles.removeAll();
+		ListIterator<String> li = RecentFiles.paths.listIterator(RecentFiles.paths.size());
+		boolean rfSaveNeeded = false;
+		
+		while (li.hasPrevious()) {
+			String path = li.previous();
+			final File file = new File(path);
+			
+			if (!file.exists()) {
+				rfSaveNeeded = true;
+				continue;
+			}
+			
+			JMenuItem menuItem = new JMenuItem(path);
+			menuItem.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					mainWindow.getModel().loadFile(file);
+				}
+			});
+			recentFiles.add(menuItem);
+		}
+		
+		if (rfSaveNeeded) RecentFiles.save();
+	}
+	
 	private void buildFileMenu(final JMenu fileMenu) {
 		fileMenu.removeAll();
 		JMenuItem menuItem = new JMenuItem("Open File...");
@@ -145,13 +190,19 @@ public class MainMenuBar extends JMenuBar {
 		fileMenu.add(menuItem);
 		fileMenu.addSeparator();
 
-		menuItem = new JMenuItem("Close");
+		menuItem = new JMenuItem("Close File");
 		menuItem.setAccelerator(
 				KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		menuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainWindow.onCloseFileMenu();
+				JTabbedPane house = mainWindow.getModel().house;
+				
+				if (e.getModifiers() != 2 || house.getTabCount() == 0)
+					mainWindow.onCloseFileMenu();
+				else {
+					mainWindow.getModel().closeOpenTab(house.getSelectedIndex());
+				}
 			}
 		});
 		fileMenu.add(menuItem);
@@ -180,9 +231,20 @@ public class MainMenuBar extends JMenuBar {
 		fileMenu.add(menuItem);
 		fileMenu.addSeparator();
 
-		menuItem = new JMenuItem("Recent Files");
-		menuItem.setEnabled(false);
-		fileMenu.add(menuItem);
+		recentFiles = new JMenu("Recent Files");
+		fileMenu.add(recentFiles);
+		
+		clearRecentFiles = new JMenuItem("Clear Recent Files");
+		clearRecentFiles.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				RecentFiles.paths.clear();
+				RecentFiles.save();
+				updateRecentFiles();
+			}
+		});
+		fileMenu.add(clearRecentFiles);
+		
 		fileMenu.addSeparator();
 
 		// Only add the exit command for non-OS X. OS X handles its close
@@ -241,6 +303,28 @@ public class MainMenuBar extends JMenuBar {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				mainWindow.onFindMenu();
+			}
+		});
+		editMenu.add(menuItem);
+		
+		menuItem = new JMenuItem("Find Next");
+		menuItem.setAccelerator(
+				KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0));
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(mainWindow.findBox != null) mainWindow.findBox.fireExploreAction(true);
+			}
+		});
+		editMenu.add(menuItem);
+		
+		menuItem = new JMenuItem("Find Previous");
+		menuItem.setAccelerator(
+				KeyStroke.getKeyStroke(KeyEvent.VK_F3, InputEvent.SHIFT_DOWN_MASK));
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(mainWindow.findBox != null) mainWindow.findBox.fireExploreAction(false);
 			}
 		});
 		editMenu.add(menuItem);
@@ -506,8 +590,9 @@ public class MainMenuBar extends JMenuBar {
 				pane.add(link);
 				pane.add(new JLabel("Contributions By:"));
 				pane.add(new JLabel("zerdei, toonetown, dstmath"));
-				pane.add(new JLabel("virustotalop, xtrafrancyz"));
-				pane.add(new JLabel("mbax, quitten, and mstrobel"));
+				pane.add(new JLabel("virustotalop, xtrafrancyz,"));
+				pane.add(new JLabel("mbax, quitten, mstrobel,"));
+				pane.add(new JLabel("FisheyLP, and Syquel"));
 				pane.add(new JLabel(" "));
 				pane.add(new JLabel("Powered By:"));
 				String procyon = "https://bitbucket.org/mstrobel/procyon";
@@ -522,8 +607,8 @@ public class MainMenuBar extends JMenuBar {
 				link.setCursor(new Cursor(Cursor.HAND_CURSOR));
 				link.addMouseListener(new LinkListener(rsyntax, link));
 				pane.add(link);
-				pane.add(new JLabel("Version: 2.6.0"));
-				pane.add(new JLabel("(c) 2016 Robert Futrell"));
+				pane.add(new JLabel("Version: 2.6.1"));
+				pane.add(new JLabel("(c) 2017 Robert Futrell"));
 				pane.add(new JLabel(" "));
 				JOptionPane.showMessageDialog(null, pane);
 			}

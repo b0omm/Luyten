@@ -43,20 +43,21 @@ public class MainWindow extends JFrame {
 	public static Model model;
 	private JProgressBar bar;
 	private JLabel label;
-	private FindBox findBox;
+	FindBox findBox;
 	private FindAllBox findAllBox;
 	private ConfigSaver configSaver;
 	private WindowPosition windowPosition;
 	private LuytenPreferences luytenPrefs;
 	private FileDialog fileDialog;
 	private FileSaver fileSaver;
+	public MainMenuBar mainMenuBar;
 
 	public MainWindow(File fileFromCommandLine) {
 		configSaver = ConfigSaver.getLoadedInstance();
 		windowPosition = configSaver.getMainWindowPosition();
 		luytenPrefs = configSaver.getLuytenPreferences();
-
-		MainMenuBar mainMenuBar = new MainMenuBar(this);
+		
+		mainMenuBar = new MainMenuBar(this);
 		this.setJMenuBar(mainMenuBar);
 
 		this.adjustWindowPositionBySavedState();
@@ -130,12 +131,15 @@ public class MainWindow extends JFrame {
 				|| fileFromCommandLine.getName().toLowerCase().endsWith(".zip")) {
 			model.startWarmUpThread();
 		}
+		
+		if(RecentFiles.load() > 0) mainMenuBar.updateRecentFiles();
 	}
 
 	public void onOpenFileMenu() {
 		File selectedFile = fileDialog.doOpenDialog();
 		if (selectedFile != null) {
 			System.out.println("[Open]: Opening " + selectedFile.getAbsolutePath());
+			
 			this.getModel().loadFile(selectedFile);
 		}
 	}

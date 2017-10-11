@@ -4,6 +4,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -27,9 +29,12 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -37,9 +42,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
@@ -73,7 +81,7 @@ public class Model extends JSplitPane {
 	public static MetadataSystem metadataSystem = new MetadataSystem(typeLoader);
 
 	private JTree tree;
-	private JTabbedPane house;
+	public JTabbedPane house;
 	private File file;
 	private DecompilerSettings settings;
 	private DecompilationOptions decompilationOptions;
@@ -117,6 +125,7 @@ public class Model extends JSplitPane {
 		tree.setCellRenderer(new CellRenderer());
 		TreeListener tl = new TreeListener();
 		tree.addMouseListener(tl);
+		tree.addTreeExpansionListener(new FurtherExpandingTreeExpansionListener());
 		tree.addKeyListener(new KeyAdapter() {
 
 			@Override
@@ -143,6 +152,20 @@ public class Model extends JSplitPane {
 				}
 			}
 		});
+
+		KeyStroke sfuncF4 = KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.CTRL_DOWN_MASK, false);
+		mainWindow.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(sfuncF4, "CloseTab");
+
+		mainWindow.getRootPane().getActionMap().put("CloseTab", new AbstractAction() {
+			private static final long serialVersionUID = -885398399200419492L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				closeOpenTab(house.getSelectedIndex());
+			}
+
+		});
+		
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, 1));
 		panel.setBorder(BorderFactory.createTitledBorder("Code"));
@@ -193,7 +216,7 @@ public class Model extends JSplitPane {
 		});
 	}
 
-	private void closeOpenTab(int index) {
+	public void closeOpenTab(int index) {
 		RTextScrollPane co = (RTextScrollPane) house.getComponentAt(index);
 		RSyntaxTextArea pane = (RSyntaxTextArea) co.getViewport().getView();
 		OpenFile open = null;
@@ -243,6 +266,35 @@ public class Model extends JSplitPane {
 					openEntryByTreePath(trp);
 				}
 			}.start();
+		}
+	}
+
+	private class FurtherExpandingTreeExpansionListener implements TreeExpansionListener {
+		@Override
+		public void treeExpanded(final TreeExpansionEvent event) {
+			final TreePath treePath = event.getPath();
+
+			final Object expandedTreePathObject = treePath.getLastPathComponent();
+			if (!(expandedTreePathObject instanceof TreeNode)) {
+				return;
+			}
+
+			final TreeNode expandedTreeNode = (TreeNode) expandedTreePathObject;
+			if (expandedTreeNode.getChildCount() == 1) {
+				final TreeNode descendantTreeNode = expandedTreeNode.getChildAt(0);
+
+				if (descendantTreeNode.isLeaf()) {
+					return;
+				}
+
+				final TreePath nextTreePath = treePath.pathByAddingChild(descendantTreeNode);
+				tree.expandPath(nextTreePath);
+			}
+		}
+
+		@Override
+		public void treeCollapsed(final TreeExpansionEvent event) {
+
 		}
 	}
 
@@ -607,6 +659,9 @@ public class Model extends JSplitPane {
 		if (open)
 			closeFile();
 		this.file = file;
+
+		RecentFiles.add(file.getAbsolutePath());
+		mainWindow.mainMenuBar.updateRecentFiles();
 		loadTree();
 	}
 
@@ -890,6 +945,7 @@ public class Model extends JSplitPane {
 		RSyntaxTextArea currentTextArea = null;
 		try {
 			int pos = house.getSelectedIndex();
+			System.out.println(pos);
 			if (pos >= 0) {
 				RTextScrollPane co = (RTextScrollPane) house.getComponentAt(pos);
 				currentTextArea = (RSyntaxTextArea) co.getViewport().getView();
